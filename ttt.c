@@ -6,6 +6,12 @@
 #define O -2
 #define BOARD_SIZE 3
 
+void printFlushed(char *s)
+{
+    printf("%s", s);
+    fflush(stdout);
+}
+
 int valid(int argc, char **argv)
 {
     if (argc != 2)
@@ -33,15 +39,15 @@ void print(int board[BOARD_SIZE][BOARD_SIZE])
         for (int j = 0; j < BOARD_SIZE; j++)
         {
             if (board[i][j] == X)
-                printf("X ");
+                printFlushed("X ");
             else if (board[i][j] == O)
-                printf("O ");
+                printFlushed("O ");
             else
-                printf("%d ", board[i][j]);
+                {printf("%d ", board[i][j]); fflush(stdout);}
         }
-        printf("\n");
+        printFlushed("\n");
     }
-    printf("\n");
+    printFlushed("\n");
 }
 
 int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
@@ -56,7 +62,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -68,7 +74,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -80,7 +86,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -92,7 +98,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -104,7 +110,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -116,7 +122,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -128,7 +134,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -140,7 +146,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
@@ -152,12 +158,12 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         }
         else
         {
-            printf("Invalid - Already Occupied\n");
+            printFlushed("Invalid - Already Occupied\n");
             return 1;
         }
         break;
     default:
-        printf("Invalid move!\n");
+        printFlushed("Invalid move!\n");
         break;
     }
 }
@@ -219,7 +225,7 @@ int move(char *argv, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
 {
     while (makeAplay(board, argv[*turn] - '0', X) == 1)
         ++*turn;
-    printf("Machine Turn: \n");
+    printFlushed("Machine Turn: \n");
     print(board);
     
     if (over(board) == O)
@@ -228,16 +234,18 @@ int move(char *argv, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
         return X;
     if (over(board) == 1)
         return 1;
-        
 
     int move = 0;
     do
     {
-        printf("Enter your move: ");
+        printFlushed("Enter your move: \n");
+        // fflush(stdin);
         fflush(stdout);
         scanf("%d", &move);
+        // fflush(stdin);
+        fflush(stdout);
     } while (makeAplay(board, move, O) != 0);
-    printf("User Turn: \n");
+    printFlushed("User Turn: \n");
     print(board);
 
     if (over(board) == O)
@@ -246,8 +254,6 @@ int move(char *argv, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
         return X;
     if (over(board) == 1)
         return 1;
-
-	
 
     return 0;
 }
@@ -259,7 +265,7 @@ int main(int argc, char **argv)
 
     if (!(valid(argc, argv)))
     {
-        printf("Error\n");
+        printFlushed("Error\n");
         return 1;
     }
     int position = 0;
@@ -270,11 +276,11 @@ int main(int argc, char **argv)
     }
 
     if (lastState == X)
-        printf("I won\n");
+        printFlushed("I won\n");
     else if (lastState == O)
-        printf("I lost\n");
+        printFlushed("I lost\n");
     else if (lastState == 1)
-        printf("DRAW\n");
+        printFlushed("DRAW\n");
 
     return 0;
 }
