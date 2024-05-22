@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #define X -1
 #define O -2
@@ -43,7 +45,10 @@ void print(int board[BOARD_SIZE][BOARD_SIZE])
             else if (board[i][j] == O)
                 printFlushed("O ");
             else
-                {printf("%d ", board[i][j]); fflush(stdout);}
+            {
+                printf("%d ", board[i][j]);
+                fflush(stdout);
+            }
         }
         printFlushed("\n");
     }
@@ -186,9 +191,7 @@ int over(int board[BOARD_SIZE][BOARD_SIZE])
         for (int j = 0; j < BOARD_SIZE; j++)
         {
             if (board[i][j] != X && board[i][j] != O)
-			{
-				isBoardFull = 0;
-			}
+                isBoardFull = 0;
 
             if (X == board[i][j])
                 countXHorizontal++;
@@ -221,13 +224,16 @@ int over(int board[BOARD_SIZE][BOARD_SIZE])
     return isBoardFull;
 }
 
-int move(char *argv, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
+int move(char *moveList, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
 {
-    while (makeAplay(board, argv[*turn] - '0', X) == 1)
-        ++*turn;
     printFlushed("Machine Turn: \n");
+    while (makeAplay(board, moveList[*turn] - '0', X) == 1)
+    {
+        ++*turn;
+    }
+    ++*turn;
     print(board);
-    
+
     if (over(board) == O)
         return O;
     if (over(board) == X)
@@ -239,11 +245,7 @@ int move(char *argv, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
     do
     {
         printFlushed("Enter your move: \n");
-        // fflush(stdin);
-        fflush(stdout);
         scanf("%d", &move);
-        // fflush(stdin);
-        fflush(stdout);
     } while (makeAplay(board, move, O) != 0);
     printFlushed("User Turn: \n");
     print(board);
