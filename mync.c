@@ -5,34 +5,139 @@
 #include <getopt.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #define PROGRAM 2
 
-struct network
+typedef struct _commandParser
 {
-    char** command;
-    int successCode;
-    int inSockfd;
-    int outSockfd;
-    int port;
-    char* ip;
-};
+    char **_command;
+    int _successCode;
+} commandParser;
 
-int tcp_server()
+typedef struct _networkParser
 {
-    return 0;
+    struct _commandParser _commandParser;
+    int _inSockfd;
+    int _outSockfd;
+    int _port;
+    char *_ip;
+} networkParser;
+
+int tcpServer(int port)
+{
+    struct sockaddr_in server;
+    struct sockaddr_in client;
+    socklen_t client_len = sizeof(client);
+    double total_t;
+
+    int opt = 1;
+    memset(&server, 0, sizeof(server));
+    memset(&client, 0, sizeof(client));
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    if (bind(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
+    {
+        perror("bind(2)");
+        close(sock);
+        return 1;
+    }
+
+    if (listen(sock, 1) < 0)
+    {
+        perror("listen(2)");
+        close(sock);
+        return 1;
+    }
+
+    printf("Waiting for TCP connection...\n");
+    int client_sock = accept(sock, (struct sockaddr *)&client, &client_len); // try to connect
+    if (client_sock < 0)
+    {
+        perror("accept(2)");
+        close(sock);
+        return 1;
+    }
 }
 
-int tcp_client()
+int tcpClient(int port, char *clientData)
 {
-    return 0;
+    struct sockaddr_in server;
+    memset(&server, 0, sizeof(server));
+    struct addrinfo hints, *res, *p;
+    int status;
+    char ipstr[INET_ADDRSTRLEN];
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ((status = getaddrinfo(clientData, NULL, &hints, &res)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+        return 2;
+    }
+
+    printf("IP addresses for %s:\n\n", clientData);
+
+    for (p = res; p != NULL; p = p->ai_next)
+    {
+        void *addr;
+        char *ipver;
+
+        // get the pointer to the address itself
+        struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+        addr = &(ipv4->sin_addr);
+        ipver = "IPv4";
+
+        // convert the IP to a string and print it:
+        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        printf("  %s: %s\n", ipver, ipstr);
+    }
+
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    printf("Starting Sender.\n");
+    if (sock < 0)
+    {
+        perror("socket(2)");
+        return 1;
+    }
+
+    if (inet_pton(AF_INET, ipstr, &server.sin_addr) <= 0)
+    {
+        perror("inet_pton(3)");
+        close(sock);
+        return 1;
+    }
+
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+
+    printf("Connecting to Reciever...\n");
+    int con = connect(sock, (struct sockaddr *)&server, sizeof(server));
+    if (con < 0)
+    {
+        perror("connect(2)");
+        close(sock);
+        return 1;
+    }
+
+    freeaddrinfo(res); // free the linked list
+
+    return sock;
 }
 
 int words(const char sentence[])
 {
-    int counted = 0; // result
+    int counted = 0;
 
-    // state:
     const char *it = sentence;
     int inword = 0;
 
@@ -73,36 +178,33 @@ char **parseCommand(char *op)
         token = strtok(NULL, " ");
     }
     command[amountOfCommands] = NULL;
-    for (int i = 0; i <= amountOfCommands; i++)
-    {
-        printf("command[%d]: %s\n", i, command[i]);
-    }
     return command;
 }
 
-int parse_args(int argc, char *argv[], char **command, int port, char *ip)
+commandParser parseArgs(int argc, char *argv[])
 {
+    commandParser comParse;
     if (argc < PROGRAM)
     {
-        // printf("1 - argc < PROGRAM\n");
-        return -1;
+        comParse._successCode = 0;
+        return comParse;
     }
 
     int i = -1;
     int o = -1;
     int opt;
+    int port;
+    char *ip;
     char *networkData;
     char serverOrClient;
     char type[3];
+    char **command;
 
     while ((opt = getopt(argc, argv, "e:i:o:b")) != -1)
     {
-        printf("opt = %d\n", opt);
         switch (opt)
         {
         case 'e':
-            // PARSE ARGS
-            printf("command: %s\n", optarg);
             command = parseCommand(optarg);
             break;
         case 'b':
@@ -110,7 +212,6 @@ int parse_args(int argc, char *argv[], char **command, int port, char *ip)
         case 'i':
             i = STDIN_FILENO;
         case 'o':
-            printf("optarg: %s\n", optarg);
             networkData = optarg;
             strncpy(type, networkData, 3);
             serverOrClient = networkData[3];
@@ -124,31 +225,43 @@ int parse_args(int argc, char *argv[], char **command, int port, char *ip)
             }
             else
             {
-                printf("2 - serverOrClient\n");
-                return 0;
+                comParse._successCode = 0;
+                return comParse;
             }
-            
+
             if (i == 0)
             {
                 o = STDOUT_FILENO;
             }
-            printf("type: %s\n", type);
             break;
         default:
-            printf("3 - default\n");
-            return 0;
+            comParse._successCode = 0;
+            return comParse;
         }
     }
-    for (int i = 0; i < 3; i++)
-    {
-        printf("command[%d]: %s\n", i, command[i]);
-    }
-    return 1;
+    printf("network data: %s\n", networkData);
+    printf("type: %s\n", type);
+    printf("server or client: %c\n", serverOrClient);
+    printf("ip: %s\n", ip);
+    printf("port: %d\n", port);
+
+    // build the network parser:
+    networkParser netParse;
+    netParse._commandParser._command = command;
+    netParse._commandParser._successCode = 1;
+    netParse._port = port;
+    netParse._ip = ip;
+    netParse._inSockfd = i;
+    netParse._outSockfd = o;
+
+    comParse._successCode = 1;
+    comParse._command = command;
+    tcpClient(port, ip);
+    return comParse;
 }
 
 void execute_command(char **cmd, int input_fd, int output_fd)
 {
-    
     if (fork() == 0)
     {
         if (input_fd != STDIN_FILENO)
@@ -172,25 +285,17 @@ void execute_command(char **cmd, int input_fd, int output_fd)
 
 int main(int argc, char *argv[])
 {
-    char **command;
-    int port;
-    char *ip;
+    commandParser parseCommand;
 
-    int a = parse_args(argc, argv, command, port, ip);
-    printf("%d", a);
+    parseCommand = parseArgs(argc, argv);
 
-    if (!a)
+    if (!parseCommand._successCode)
     {
         printf("Usage: %s -e \"<command> <args>\" [-i|-o|-b] [TCPS<PORT> | TCPC<ip:port> | TCPC<hostname:port>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    for (int i = 0; i < 3; i++)
-    {
-        printf("command[%d]: %s\n", i, command[i]);
-    }
-
-    execute_command(command, STDIN_FILENO, STDOUT_FILENO);
+    execute_command(parseCommand._command, STDIN_FILENO, STDOUT_FILENO);
 
     return 0;
 }

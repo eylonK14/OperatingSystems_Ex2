@@ -1,4 +1,4 @@
-$CC = gcc
+$CC = gcc -std=gnuXX
 $CFLAGS = -Wall -g
 
 all: ttt.c mync.c
