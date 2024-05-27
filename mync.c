@@ -26,7 +26,7 @@ typedef struct _networkParser
     int _outSockfd;
     int _port;
     char *_ip;
-} networkParser;
+} networkParser; 
 
 int tcpServer(int port)
 {
