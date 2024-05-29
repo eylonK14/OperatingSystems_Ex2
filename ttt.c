@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/wait.h>
 
 #define X -1
 #define O -2
@@ -55,118 +54,42 @@ void print(int board[BOARD_SIZE][BOARD_SIZE])
     printFlushed("\n");
 }
 
+int putInLocation(int board[BOARD_SIZE][BOARD_SIZE], int i, int j, int sign)
+{
+    if (board[i][j] != X && board[i][j] != O)
+    {
+        board[i][j] = sign;
+        return 0;
+    }
+    else
+    {
+        printFlushed("Invalid - Already Occupied\n");
+        return 1;
+    }
+}
+
 int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
 {
     switch (move)
     {
     case 1:
-        if (board[0][0] != X && board[0][0] != O)
-        {
-            board[0][0] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 0, 0, sign);
     case 2:
-        if (board[0][1] != X && board[0][1] != O)
-        {
-            board[0][1] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 0, 1, sign);
     case 3:
-        if (board[0][2] != X && board[0][2] != O)
-        {
-            board[0][2] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 0, 2, sign);
     case 4:
-        if (board[1][0] != X && board[1][0] != O)
-        {
-            board[1][0] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 1, 0, sign);
     case 5:
-        if (board[1][1] != X && board[1][1] != O)
-        {
-            board[1][1] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 1, 1, sign);
     case 6:
-        if (board[1][2] != X && board[1][2] != O)
-        {
-            board[1][2] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 1, 2, sign);
     case 7:
-        if (board[2][0] != X && board[2][0] != O)
-        {
-            board[2][0] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 2, 0, sign);
     case 8:
-        if (board[2][1] != X && board[2][1] != O)
-        {
-            board[2][1] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 2, 1, sign);
     case 9:
-        if (board[2][2] != X && board[2][2] != O)
-        {
-            board[2][2] = sign;
-            return 0;
-        }
-        else
-        {
-            printFlushed("Invalid - Already Occupied\n");
-            return 1;
-        }
-        break;
+        return putInLocation(board, 2, 2, sign);
     default:
         printFlushed("Invalid move!\n");
         break;
