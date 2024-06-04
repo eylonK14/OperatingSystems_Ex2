@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #include "parser.h"
 
 void execute_command(char **cmd, int input_fd, int output_fd)
 {
-    if (fork() == 0)
+    pid_t id;
+    if ((id = fork()) == 0)
     {
         if (input_fd != STDIN_FILENO)
         {
@@ -20,12 +23,13 @@ void execute_command(char **cmd, int input_fd, int output_fd)
     else
     {
         execvp(cmd[0], cmd);
+        kill(id, SIGKILL);
         perror("execvp");
         exit(EXIT_FAILURE);
     }
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
     networkParser parseCommand;
 

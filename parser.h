@@ -9,9 +9,6 @@
 #include "udpHandler.h"
 
 #define PROGRAM 2
-#define I_FLAG 1
-#define O_FLAG 2
-
 
 typedef struct _commandParser
 {

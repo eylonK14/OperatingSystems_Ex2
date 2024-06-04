@@ -55,20 +55,21 @@ int parseNetworkData(char *networkData, int *port, char *ip)
     char serverOrClient = networkData[3];
     if (serverOrClient == 'S')
     {
-        port = atoi(networkData + 4);
-        sockfd = tcpServer(port);
+        *port = atoi(networkData + 4);
+        sockfd = tcpServer(*port);
     }
     else if (serverOrClient == 'C')
     {
         ip = networkData + 4;
-        port = atoi(strchr(ip, ':') + 1);
+        *port = atoi(strchr(ip, ':') + 1);
         ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
-        sockfd = tcpClient(port, ip);
+        printf("the current ip is: %s\n", ip);
+        sockfd = tcpClient(*port, ip);
     }
     return sockfd;
 }
 
-networkParser parseArgs(int argc, char *argv[])
+networkParser parseArgs(int argc, char **argv)
 {
     networkParser netParse;
     if (argc < PROGRAM)
@@ -79,9 +80,9 @@ networkParser parseArgs(int argc, char *argv[])
 
     int i = STDIN_FILENO;
     int o = STDOUT_FILENO;
-    int opt;
-    int port;
-    char *ip;
+    int opt = 0;
+    int port = 0;;
+    char *ip = NULL;
     char **command;
 
     while ((opt = getopt(argc, argv, "e:i:o:b")) != -1)
@@ -92,14 +93,15 @@ networkParser parseArgs(int argc, char *argv[])
             command = parseCommand(optarg);
             break;
         case 'b':
-            i = parseNetworkData(optarg, &port, &ip);
-            o = parseNetworkData(optarg, &port, &ip);
+            i = parseNetworkData(optarg, &port, ip);
+            o = parseNetworkData(optarg, &port, ip);
             break;
         case 'i':
-            i = parseNetworkData(optarg, &port, &ip);
+            i = parseNetworkData(optarg, &port, ip);
+            printf("i: %d\n", i);
             break;
         case 'o':
-            o = parseNetworkData(optarg, &port, &ip);
+            o = parseNetworkData(optarg, &port, ip);
             break;
         default:
             netParse._commandParser._successCode = 0;

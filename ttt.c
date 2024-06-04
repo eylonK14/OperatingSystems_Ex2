@@ -94,6 +94,7 @@ int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
         printFlushed("Invalid move!\n");
         break;
     }
+    return 1;
 }
 
 int over(int board[BOARD_SIZE][BOARD_SIZE])

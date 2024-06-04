@@ -5,9 +5,7 @@ int tcpServer(int port)
     struct sockaddr_in server;
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
-    double total_t;
 
-    int opt = 1;
     memset(&server, 0, sizeof(server));
     memset(&client, 0, sizeof(client));
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
