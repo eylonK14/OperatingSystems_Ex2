@@ -1,3 +1,5 @@
+#include "tcpHandler.h"
+
 int tcpServer(int port)
 {
     struct sockaddr_in server;

@@ -1,17 +1,6 @@
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
 
-#include <sys/wait.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-
-#define PROGRAM 2
+#include "parser.h"
 
 void execute_command(char **cmd, int input_fd, int output_fd)
 {
@@ -38,17 +27,17 @@ void execute_command(char **cmd, int input_fd, int output_fd)
 
 int main(int argc, char *argv[])
 {
-    commandParser parseCommand;
+    networkParser parseCommand;
 
     parseCommand = parseArgs(argc, argv);
 
-    if (!parseCommand._successCode)
+    if (!parseCommand._commandParser._successCode)
     {
         printf("Usage: %s -e \"<command> <args>\" [-i|-o|-b] [TCPS<PORT> | TCPC<ip:port> | TCPC<hostname:port>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-    execute_command(parseCommand._command, STDIN_FILENO, STDOUT_FILENO);
+    execute_command(parseCommand._commandParser._command, parseCommand._inSockfd, parseCommand._outSockfd);
 
     return 0;
 }
