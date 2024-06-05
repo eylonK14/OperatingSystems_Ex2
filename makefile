@@ -1,6 +1,6 @@
 # Variables
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Werror
+CFLAGS = -g -Wall -Wextra -Werror -lc
 LDFLAGS = -static
 LIBNAME = libmylib.a
 
@@ -10,9 +10,12 @@ OBJ_LIB_FILES = parser.o tcpHandler.o udpHandler.o
 # Object files for executables
 OBJ_EXEC_FILES = ttt.o mync.o
 
+# Default target
+all: lib executables
+
 # Static library
 $(LIBNAME): $(OBJ_LIB_FILES)
-	ar rcs $(LIBNAME) $(OBJ_LIB_FILES)
+	ar rcs $(LIBNAME) $(OBJ_LIB_FILES) -lc
 	ranlib $(LIBNAME)
 
 # Compile each.c file into an object file (.o)
@@ -26,9 +29,6 @@ lib: $(LIBNAME)
 executables: $(OBJ_EXEC_FILES)
 	$(CC) $(CFLAGS) -o ttt ttt.o
 	$(CC) $(CFLAGS) -o mync mync.o $(LIBNAME)
-
-# Default target
-all: lib executables
 
 # Clean up
 clean:

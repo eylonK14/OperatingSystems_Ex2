@@ -72,7 +72,8 @@ networkParser parseArgs(int argc, char **argv)
     networkParser netParse;
     netParse._inSockfd = STDIN_FILENO;
     netParse._outSockfd = STDOUT_FILENO;
-    if (argc < PROGRAM)
+    netParse._execute = 0;
+    if (argc < 1)
     {
         netParse._commandParser._successCode = 0;
         return netParse;
@@ -85,6 +86,7 @@ networkParser parseArgs(int argc, char **argv)
         {
         case 'e':
             netParse = parseCommand(netParse, optarg);
+            netParse._execute = 1;
             break;
         case 'b':
         case 'i':

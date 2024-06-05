@@ -4,11 +4,15 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <sys/param.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <signal.h>
 
 #include "tcpHandler.h"
 #include "udpHandler.h"
-
-#define PROGRAM 2
 
 typedef struct _commandParser
 {
@@ -19,6 +23,7 @@ typedef struct _commandParser
 typedef struct _networkParser
 {
     struct _commandParser _commandParser;
+    int _execute;
     int _inSockfd;
     int _outSockfd;
     int _port;
