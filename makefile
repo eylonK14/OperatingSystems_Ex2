@@ -1,41 +1,6 @@
-# $CC = gcc
-# $CFLAGS = -Wall -g
-
-
-# all: ttt mync libparse.a
-# 	$(CC) $(CFLAGS) -o ttt ttt.c -lc
-# 	$(CC) $(CFLAGS) -o mync mync.c -lc
-
-# ttt: ttt.c
-# 	$(CC) $(CFLAGS) -o ttt ttt.c -lc
-
-# mync: mync.o libparse.a
-# 	$(CC) $(CFLAGS) -o mync mync.o -L. -lparse
-
-# mync.o: mync.c
-# 	$(CC) $(CFLAGS) -c mync.c -o mync.o
-
-# parser.o: parser.c parser.h
-# 	$(CC) $(CFLAGS) -c parser.c -o parser.o
-
-# libparse.a: udpHandler.o tcpHandler.o parser.o
-# 	ar rcs libparse.a udpHandler.o tcpHandler.o parser.o
-
-# udpHandler.o: udpHandler.c udpHandler.h
-# 	$(CC) $(CFLAGS) -c udpHandler.c -o udpHandler.o
-
-# tcpHandler.o: tcpHandler.c tcpHandler.h
-# 	$(CC) $(CFLAGS) -c tcpHandler.c -o tcpHandler.o
-
-
-# clean:
-# 	rm -f *.o *.a ttt mync
-
-# .PHONY: clean all
-
 # Variables
 CC = gcc
-CFLAGS = -Wall -Wextra -Werror
+CFLAGS = -g -Wall -Wextra -Werror
 LDFLAGS = -static
 LIBNAME = libmylib.a
 

@@ -25,6 +25,4 @@ typedef struct _networkParser
     char *_ip;
 } networkParser;
 
-char **parseCommand(char*);
-
 networkParser parseArgs(int, char **);

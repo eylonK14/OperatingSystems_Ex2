@@ -35,7 +35,7 @@ int tcpServer(int port)
         close(sock);
         return 1;
     }
-    return sock;
+    return client_sock;
 }
 
 int tcpClient(int port, char *clientData)
@@ -74,7 +74,6 @@ int tcpClient(int port, char *clientData)
     }
 
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    printf("Starting Sender.\n");
     if (sock < 0)
     {
         perror("socket(2)");
@@ -91,7 +90,6 @@ int tcpClient(int port, char *clientData)
     server.sin_family = AF_INET;
     server.sin_port = htons(port);
 
-    printf("Connecting to Reciever...\n");
     int con = connect(sock, (struct sockaddr *)&server, sizeof(server));
     if (con < 0)
     {
@@ -101,6 +99,8 @@ int tcpClient(int port, char *clientData)
     }
 
     freeaddrinfo(res); // free the linked list
+
+    printf("the server socket is: %d\n", sock);
 
     return sock;
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <signal.h>
 
 #include "parser.h"
@@ -9,23 +10,19 @@ void execute_command(char **cmd, int input_fd, int output_fd)
     pid_t id;
     if ((id = fork()) == 0)
     {
-        if (input_fd != STDIN_FILENO)
-        {
-            dup2(input_fd, STDIN_FILENO);
-            close(input_fd);
-        }
-        if (output_fd != STDOUT_FILENO)
-        {
-            dup2(output_fd, STDOUT_FILENO);
-            close(output_fd);
-        }
-    }
-    else
-    {
+        dup2(input_fd, STDIN_FILENO);
+        dup2(output_fd, STDOUT_FILENO);
+
         execvp(cmd[0], cmd);
         kill(id, SIGKILL);
         perror("execvp");
         exit(EXIT_FAILURE);
+    }
+    else
+    {
+        close(output_fd);
+        close(input_fd);
+        wait(NULL);
     }
 }
 
