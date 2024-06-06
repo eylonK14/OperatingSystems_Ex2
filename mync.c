@@ -17,7 +17,6 @@ void handle_client(int sockfd, int inOrOut)
         else
         {
             FD_SET(sockfd, &fds);
-            // FD_SET(STDOUT_FILENO, &fds);
         }
 
         int max_fd = sockfd > STDIN_FILENO ? sockfd : STDIN_FILENO;

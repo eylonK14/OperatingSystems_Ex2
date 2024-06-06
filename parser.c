@@ -13,12 +13,12 @@ networkParser parseCommand(networkParser parser, char *op)
 {
     int amountOfCommands = words(op);
 
-    char **command = (char**) malloc(sizeof(char *) * (amountOfCommands + 1));
+    char **command = (char **)malloc(sizeof(char *) * (amountOfCommands + 1));
     char *token = strtok(op, " ");
     int i = 0;
     while (token != NULL)
     {
-        command[i] = (char *) malloc(sizeof(char) * strlen(token));
+        command[i] = (char *)malloc(sizeof(char) * strlen(token));
         command[i++] = token;
         token = strtok(NULL, " ");
     }
@@ -28,29 +28,49 @@ networkParser parseCommand(networkParser parser, char *op)
     return parser;
 }
 
+int createNetworkSocket(char *ip, int *port, char *networkData ,int (*serverFunction)(int), int (*clientFunction)(int, char *))
+{
+    int sockfd = -1;
+    char serverOrClient = networkData[3];
+    if (serverOrClient == 'S')
+    {
+        *port = atoi(networkData + 4);
+        int p = *port;
+        sockfd = serverFunction(p);
+    }
+    else if (serverOrClient == 'C')
+    {
+        ip = networkData + 4;
+        *port = atoi(strchr(ip, ':') + 1);
+        int p = *port;
+        ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
+        printf("the current ip is: %s\n", ip);
+        sockfd = clientFunction(p, ip);
+        printf("the current sockfd is: %d\n", sockfd);
+    }
+    else
+        exit(EXIT_FAILURE);
+    return sockfd;
+}
+
 networkParser parseNetworkData(networkParser netParse, char opt, char *networkData)
 {
     int sockfd = -1, port = 0;
     char type[3];
     char *ip = NULL;
     strncpy(type, networkData, 3);
-    char serverOrClient = networkData[3];
-    if (serverOrClient == 'S')
+    if (strcmp(type, "TCP") == 0)
     {
-        port = atoi(networkData + 4);
-        sockfd = tcpServer(port);
+        sockfd = createNetworkSocket(ip, &port, networkData, tcpServer, tcpClient);
     }
-    else if (serverOrClient == 'C')
+    else if (strcmp(type, "UDP") == 0)
     {
-        ip = networkData + 4;
-        port = atoi(strchr(ip, ':') + 1);
-        ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
-        printf("the current ip is: %s\n", ip);
-        sockfd = tcpClient(port, ip);
-        printf("the current sockfd is: %d\n", sockfd);
+        sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
     }
     else
+    {
         exit(EXIT_FAILURE);
+    }
 
     if (opt == 'i')
         netParse._inSockfd = sockfd;
