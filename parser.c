@@ -13,12 +13,12 @@ networkParser parseCommand(networkParser parser, char *op)
 {
     int amountOfCommands = words(op);
 
-    char **command = malloc(sizeof(char *) * (amountOfCommands + 1));
+    char **command = (char**) malloc(sizeof(char *) * (amountOfCommands + 1));
     char *token = strtok(op, " ");
     int i = 0;
     while (token != NULL)
     {
-        command[i] = malloc(sizeof(char) * strlen(token));
+        command[i] = (char *) malloc(sizeof(char) * strlen(token));
         command[i++] = token;
         token = strtok(NULL, " ");
     }
@@ -72,7 +72,6 @@ networkParser parseArgs(int argc, char **argv)
     networkParser netParse;
     netParse._inSockfd = STDIN_FILENO;
     netParse._outSockfd = STDOUT_FILENO;
-    netParse._execute = 0;
     if (argc < 1)
     {
         netParse._commandParser._successCode = 0;
@@ -86,7 +85,6 @@ networkParser parseArgs(int argc, char **argv)
         {
         case 'e':
             netParse = parseCommand(netParse, optarg);
-            netParse._execute = 1;
             break;
         case 'b':
         case 'i':

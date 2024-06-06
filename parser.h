@@ -14,6 +14,8 @@
 #include "tcpHandler.h"
 #include "udpHandler.h"
 
+#define BUFFER_SIZE 1024
+
 typedef struct _commandParser
 {
     char **_command;
@@ -23,7 +25,6 @@ typedef struct _commandParser
 typedef struct _networkParser
 {
     struct _commandParser _commandParser;
-    int _execute;
     int _inSockfd;
     int _outSockfd;
     int _port;
