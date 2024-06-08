@@ -61,16 +61,16 @@ int tcpClient(int port, char *clientData)
     for (p = res; p != NULL; p = p->ai_next)
     {
         void *addr;
-        char *ipver;
+        char *ipversion;
 
         // get the pointer to the address itself
         struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
         addr = &(ipv4->sin_addr);
-        ipver = "IPv4";
+        ipversion = "IPv4";
 
         // convert the IP to a string and print it:
         inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
-        printf("  %s: %s\n", ipver, ipstr);
+        printf("  %s: %s\n", ipversion, ipstr);
     }
 
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -99,8 +99,6 @@ int tcpClient(int port, char *clientData)
     }
 
     freeaddrinfo(res); // free the linked list
-
-    printf("the server socket is: %d\n", sock);
 
     return sock;
 }

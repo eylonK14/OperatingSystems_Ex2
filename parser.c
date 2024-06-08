@@ -46,10 +46,10 @@ int createNetworkSocket(char *ip, int *port, char *networkData ,int (*serverFunc
         ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
         printf("the current ip is: %s\n", ip);
         sockfd = clientFunction(p, ip);
-        printf("the current sockfd is: %d\n", sockfd);
     }
     else
         exit(EXIT_FAILURE);
+    printf("the currrrrrent sockfd is: %d\n", sockfd);
     return sockfd;
 }
 
@@ -60,17 +60,11 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     char *ip = NULL;
     strncpy(type, networkData, 3);
     if (strcmp(type, "TCP") == 0)
-    {
         sockfd = createNetworkSocket(ip, &port, networkData, tcpServer, tcpClient);
-    }
     else if (strcmp(type, "UDP") == 0)
-    {
         sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
-    }
     else
-    {
         exit(EXIT_FAILURE);
-    }
 
     if (opt == 'i')
         netParse._inSockfd = sockfd;
@@ -116,7 +110,6 @@ networkParser parseArgs(int argc, char **argv)
             return netParse;
         }
     }
-    // build the network parser:
     netParse._commandParser._successCode = 1;
 
     return netParse;

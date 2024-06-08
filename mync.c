@@ -20,7 +20,6 @@ void handle_client(int sockfd, int inOrOut)
         }
 
         int max_fd = sockfd > STDIN_FILENO ? sockfd : STDIN_FILENO;
-
         select(max_fd + 1, &fds, NULL, NULL, NULL);
 
         if (FD_ISSET(sockfd, &fds))
@@ -51,7 +50,6 @@ void execute_command(networkParser parseCommand)
     char **cmd = parseCommand._commandParser._command;
     if (cmd != NULL)
     {
-        // if command is not provided, make the two file descriptors talk to each other
         if (input_fd != STDIN_FILENO)
             handle_client(input_fd, 1);
         else if (output_fd != STDOUT_FILENO)
