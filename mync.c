@@ -1,5 +1,34 @@
 #include "parser.h"
+#include <signal.h>
 
+pid_t id = 0;
+
+void handle_alarm(int sig)
+{
+    printf("Process No. %d timed out\n", sig);
+    if (id)
+        kill(id, SIGKILL);
+}
+
+// static void handle_done(int signum)
+// {
+//     if (!done)
+//         done = signum;
+// }
+//
+// static int install_done(int signum)
+// {
+//     struct sigaction act;
+//
+//     memset(&act, 0, sizeof act);
+//     sigemptyset(&act.sa_mask);
+//
+//     act.sa_handler = handle_done;
+//     act.sa_flags = 0;
+//
+//     return sigaction(signum, &act, ((void*)0));
+// }
+//
 void handle_client(int sockfd, int inOrOut)
 {
     char buffer[BUFFER_SIZE];
@@ -48,7 +77,13 @@ void execute_command(networkParser parseCommand)
     int input_fd = parseCommand._inSockfd;
     int output_fd = parseCommand._outSockfd;
     char **cmd = parseCommand._commandParser._command;
-    if (cmd != NULL)
+
+    if (parseCommand._connectionType != NULL && strcmp(parseCommand._connectionType, "UDP") == 0)
+    {
+        alarm(parseCommand._timeout);
+    }
+
+    if (!parseCommand._hasCommand)
     {
         if (input_fd != STDIN_FILENO)
             handle_client(input_fd, 1);
@@ -57,7 +92,7 @@ void execute_command(networkParser parseCommand)
 
         return;
     }
-    pid_t id;
+
     if ((id = fork()) == 0)
     {
         dup2(input_fd, STDIN_FILENO);
@@ -73,6 +108,7 @@ void execute_command(networkParser parseCommand)
         close(output_fd);
         close(input_fd);
         wait(NULL);
+        alarm(0);
     }
 }
 
@@ -87,6 +123,8 @@ int main(int argc, char **argv)
         printf("Usage: %s [-e \"<command> <args>\"] [-i|-o|-b] [TCPS<PORT> | TCPC<ip:port> | TCPC<hostname:port>]\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
+    signal(SIGALRM, handle_alarm);
 
     execute_command(parseCommand);
 

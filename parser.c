@@ -24,11 +24,11 @@ networkParser parseCommand(networkParser parser, char *op)
     }
     command[amountOfCommands] = NULL;
     parser._commandParser._command = command;
-
+    parser._hasCommand = 1;
     return parser;
 }
 
-int createNetworkSocket(char *ip, int *port, char *networkData ,int (*serverFunction)(int), int (*clientFunction)(int, char *))
+int createNetworkSocket(char *ip, int *port, char *networkData, int (*serverFunction)(int), int (*clientFunction)(int, char *))
 {
     int sockfd = -1;
     char serverOrClient = networkData[3];
@@ -60,9 +60,13 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     char *ip = NULL;
     strncpy(type, networkData, 3);
     if (strcmp(type, "TCP") == 0)
+    {
         sockfd = createNetworkSocket(ip, &port, networkData, tcpServer, tcpClient);
+    }
     else if (strcmp(type, "UDP") == 0)
+    {
         sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
+    }
     else
         exit(EXIT_FAILURE);
 
@@ -77,7 +81,7 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     }
     netParse._port = port;
     netParse._ip = ip;
-
+    netParse._connectionType = type;
     return netParse;
 }
 
@@ -86,6 +90,7 @@ networkParser parseArgs(int argc, char **argv)
     networkParser netParse;
     netParse._inSockfd = STDIN_FILENO;
     netParse._outSockfd = STDOUT_FILENO;
+    netParse._hasCommand = 0;
     if (argc < 1)
     {
         netParse._commandParser._successCode = 0;
@@ -93,7 +98,7 @@ networkParser parseArgs(int argc, char **argv)
     }
 
     int opt = 0;
-    while ((opt = getopt(argc, argv, "e:i:o:b:")) != -1)
+    while ((opt = getopt(argc, argv, "e:i:o:b:t:")) != -1)
     {
         switch (opt)
         {
@@ -104,6 +109,9 @@ networkParser parseArgs(int argc, char **argv)
         case 'i':
         case 'o':
             netParse = parseNetworkData(netParse, opt, optarg);
+            break;
+        case 't':
+            netParse._timeout = atoi(optarg);
             break;
         default:
             netParse._commandParser._successCode = 0;

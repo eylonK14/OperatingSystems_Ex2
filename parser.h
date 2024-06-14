@@ -25,10 +25,13 @@ typedef struct _commandParser
 typedef struct _networkParser
 {
     struct _commandParser _commandParser;
+    int _hasCommand;
     int _inSockfd;
     int _outSockfd;
     int _port;
     char *_ip;
+    char* _connectionType;
+    int _timeout;
 } networkParser;
 
 networkParser parseArgs(int, char **);
