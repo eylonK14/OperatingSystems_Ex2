@@ -1,14 +1,5 @@
 #include "udpHandler.h"
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET)
-        return &(((struct sockaddr_in *)sa)->sin_addr);
-
-    return &(((struct sockaddr_in6 *)sa)->sin6_addr);
-}
-
 int udpServer(int port)
 {
     int sockfd;
@@ -32,7 +23,7 @@ int udpServer(int port)
     // loop through all the results and bind to the first we can
     for (p = serverinfo; p != NULL; p = p->ai_next)
     {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,p->ai_protocol)) == -1)
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
         {
             perror("listener: socket");
             continue;
@@ -81,8 +72,7 @@ int udpClient(int port, char *clientData)
     // loop through all the results and make a socket
     for (p = serverinfo; p != NULL; p = p->ai_next)
     {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype,
-                             p->ai_protocol)) == -1)
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
         {
             perror("talker: socket");
             continue;

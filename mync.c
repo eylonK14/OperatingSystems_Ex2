@@ -10,25 +10,6 @@ void handle_alarm(int sig)
         kill(id, SIGKILL);
 }
 
-// static void handle_done(int signum)
-// {
-//     if (!done)
-//         done = signum;
-// }
-//
-// static int install_done(int signum)
-// {
-//     struct sigaction act;
-//
-//     memset(&act, 0, sizeof act);
-//     sigemptyset(&act.sa_mask);
-//
-//     act.sa_handler = handle_done;
-//     act.sa_flags = 0;
-//
-//     return sigaction(signum, &act, ((void*)0));
-// }
-//
 void handle_client(int sockfd, int inOrOut)
 {
     char buffer[BUFFER_SIZE];

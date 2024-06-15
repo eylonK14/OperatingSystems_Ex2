@@ -5,7 +5,7 @@ LDFLAGS = -static
 LIBNAME = libmylib.a
 
 # Object files for the library
-OBJ_LIB_FILES = parser.o tcpHandler.o udpHandler.o
+OBJ_LIB_FILES = parser.o tcpHandler.o udpHandler.o udsHandler.o
 
 # Object files for executables
 OBJ_EXEC_FILES = ttt.o mync.o

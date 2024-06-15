@@ -53,6 +53,35 @@ int createNetworkSocket(char *ip, int *port, char *networkData, int (*serverFunc
     return sockfd;
 }
 
+int unixDomainSocketParser(char *networkData)
+{
+    int sockfd = -1;
+    char serverOrClient = networkData[3];
+    char tcpOrUdp = networkData[4];
+    char *path = networkData + 5;
+    if (serverOrClient == 'S')
+    {
+        if (tcpOrUdp == 'S')
+            sockfd = streamServer(path);
+        else if (tcpOrUdp == 'D')
+            sockfd = datagramServer(path);
+        else
+            exit(EXIT_FAILURE);
+    }
+    else if (serverOrClient == 'C')
+    {
+        if (tcpOrUdp == 'S')
+            sockfd = streamClient(path);
+        else if (tcpOrUdp == 'D')
+            sockfd = datagramClient(path);
+        else
+            exit(EXIT_FAILURE);
+    }
+    else
+        exit(EXIT_FAILURE);
+    return sockfd;
+}
+
 networkParser parseNetworkData(networkParser netParse, char opt, char *networkData)
 {
     int sockfd = -1, port = 0;
@@ -66,6 +95,10 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     else if (strcmp(type, "UDP") == 0)
     {
         sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
+    }
+    else if (strcmp(type, "UDS") == 0)
+    {
+        sockfd = unixDomainSocketParser(networkData);
     }
     else
         exit(EXIT_FAILURE);

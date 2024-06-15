@@ -10,14 +10,16 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <signal.h>
-
+#include <sys/un.h>
 #include "tcpHandler.h"
 #include "udpHandler.h"
+#include "udsHandler.h"
 
 #define BUFFER_SIZE 1024
 
 typedef struct _commandParser
 {
+
     char **_command;
     int _successCode;
 } commandParser;
@@ -30,7 +32,7 @@ typedef struct _networkParser
     int _outSockfd;
     int _port;
     char *_ip;
-    char* _connectionType;
+    char *_connectionType;
     int _timeout;
 } networkParser;
 
