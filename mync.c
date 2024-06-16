@@ -66,10 +66,15 @@ void execute_command(networkParser parseCommand)
 
     if (!parseCommand._hasCommand)
     {
+        printf("Connected to\n");
+        printf("Input: %d\n", input_fd);
+        printf("Output: %d\n", output_fd);
         if (input_fd != STDIN_FILENO)
             handle_client(input_fd, 1);
         else if (output_fd != STDOUT_FILENO)
             handle_client(output_fd, 0);
+        else if    (input_fd == STDIN_FILENO && output_fd == STDOUT_FILENO)
+            handle_client(input_fd, 1);
 
         return;
     }
