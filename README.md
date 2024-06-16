@@ -2,7 +2,7 @@
 
 This project implements a Tic-Tac-Toe game, and uses a netcat clone called mync in order to execute it over processes.
 
-note: every stage has the capabilities of the all the previous stages.
+note: every stage has the capabilities of all the previous stages.
 
 ## Table of Contents
 
@@ -79,6 +79,7 @@ In this stage, mync is given the option to use UDS services (both DATAGRAM/STREA
    ./mync -e "./ttt 123456789" -i TCPS4050 -o TCPClocalhost:4455
 
    //Stage 3.5: 
+   
    ./mync
    ./mync -i TCPS4050
    ./mync -b TCPS4050 
