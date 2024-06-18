@@ -1,0 +1,196 @@
+        -:    0:Source:mync.c
+        -:    0:Graph:mync.gcno
+        -:    0:Data:mync.gcda
+        -:    0:Runs:19
+        -:    1:#include "parser.h"
+        -:    2:#include <signal.h>
+        -:    3:
+        -:    4:pid_t id = 0;
+        -:    5:
+        1:    6:void handle_alarm(int sig)
+        -:    7:{
+        1:    8:    printf("Process No. %d timed out\n", sig);
+        1:    9:    if (id)
+        1:   10:        kill(id, SIGKILL);
+        1:   11:}
+        -:   12:
+        2:   13:void two_way_comm(int inSockfd, int outSockfd)
+        -:   14:{
+        -:   15:    fd_set fds;
+        -:   16:    char buffer[BUFFER_SIZE];
+        -:   17:    int n;
+        -:   18:
+        -:   19:    while (1)
+        2:   20:    {
+       68:   21:        FD_ZERO(&fds);
+        4:   22:        FD_SET(inSockfd, &fds);
+        4:   23:        FD_SET(outSockfd, &fds);
+        -:   24:
+        4:   25:        int max_fd = inSockfd > outSockfd ? inSockfd : outSockfd;
+        4:   26:        select(max_fd + 1, &fds, NULL, NULL, NULL);
+        -:   27:
+        4:   28:        if (FD_ISSET(inSockfd, &fds))
+        -:   29:        {
+        4:   30:            if ((n = read(inSockfd, buffer, sizeof(buffer) - 1)) <= 0)
+    #####:   31:                break;
+        4:   32:            buffer[n] = '\0';
+        4:   33:            if (strcmp(buffer, "exit\n") == 0)
+        2:   34:                break;
+        2:   35:            write(outSockfd, buffer, n);
+        -:   36:        }
+        -:   37:
+        2:   38:        if (FD_ISSET(outSockfd, &fds))
+        -:   39:        {
+        2:   40:            if ((n = read(outSockfd, buffer, sizeof(buffer) - 1)) <= 0)
+    #####:   41:                break;
+        2:   42:            buffer[n] = '\0';
+        2:   43:            if (strcmp(buffer, "exit\n") == 0)
+    #####:   44:                break;
+        2:   45:            write(inSockfd, buffer, n);
+        -:   46:        }
+        -:   47:    }
+        2:   48:}
+        -:   49:
+        7:   50:void handle_client(int sockfd, int inOrOut)
+        -:   51:{
+        -:   52:    char buffer[BUFFER_SIZE];
+        -:   53:    fd_set fds;
+        -:   54:    int n;
+        -:   55:
+        -:   56:    while (1)
+       65:   57:    {
+     1224:   58:        FD_ZERO(&fds);
+       72:   59:        if (inOrOut)
+        -:   60:        {
+       62:   61:            FD_SET(sockfd, &fds);
+       62:   62:            FD_SET(STDIN_FILENO, &fds);
+        -:   63:        }
+        -:   64:        else
+        -:   65:        {
+       10:   66:            FD_SET(sockfd, &fds);
+        -:   67:        }
+        -:   68:
+       72:   69:        int max_fd = sockfd > STDIN_FILENO ? sockfd : STDIN_FILENO;
+       72:   70:        select(max_fd + 1, &fds, NULL, NULL, NULL);
+        -:   71:
+       72:   72:        if (FD_ISSET(sockfd, &fds))
+        -:   73:        {
+       33:   74:            if ((n = read(sockfd, buffer, sizeof(buffer) - 1)) <= 0)
+        5:   75:                break;
+       28:   76:            buffer[n] = '\0';
+       28:   77:            if (strcmp(buffer, "exit\n") == 0)
+    #####:   78:                break;
+       28:   79:            printf("%s", buffer);
+       28:   80:            fflush(stdout);
+        -:   81:        }
+        -:   82:
+       67:   83:        if (FD_ISSET(STDIN_FILENO, &fds))
+        -:   84:        {
+      39*:   85:            if ((n = read(STDIN_FILENO, buffer, sizeof(buffer) - 1)) <= 0)
+    #####:   86:                continue;
+       39:   87:            buffer[n] = '\0';
+       39:   88:            if (strcmp(buffer, "exit\n") == 0)
+        2:   89:                break;
+       37:   90:            write(sockfd, buffer, n);
+        -:   91:        }
+        -:   92:    }
+        -:   93:
+        7:   94:    close(sockfd);
+        7:   95:}
+        -:   96:
+        2:   97:void one_way_comm(int inSockfd, int outSockfd)
+        -:   98:{
+        -:   99:    char buffer[BUFFER_SIZE];
+        -:  100:    int n;
+        -:  101:
+        7:  102:    while ((n = read(inSockfd, buffer, sizeof(buffer) - 1)) > 0)
+        -:  103:    {
+        6:  104:        buffer[n] = '\0';
+        6:  105:        if (strcmp(buffer, "exit\n") == 0)
+        1:  106:            break;
+        5:  107:        write(outSockfd, buffer, n);
+        -:  108:    }
+        2:  109:}
+        -:  110:
+       14:  111:void execute_command(networkParser parseCommand)
+        -:  112:{
+       14:  113:    int input_fd = parseCommand._inSockfd;
+       14:  114:    int output_fd = parseCommand._outSockfd;
+       14:  115:    char **cmd = parseCommand._commandParser._command;
+        -:  116:
+       14:  117:    if (parseCommand._hasConnectionType && strcmp(parseCommand._connectionType, "UDP") == 0)
+        1:  118:        alarm(parseCommand._timeout);
+        -:  119:
+       14:  120:    if (!parseCommand._hasCommand)
+        -:  121:    {
+       11:  122:        printf("parseCommand._i: %d\n", parseCommand._i);
+       11:  123:        printf("parseCommand._o: %d\n", parseCommand._o);
+        -:  124:
+       11:  125:        if (parseCommand._i == 2) // Two way communication
+        -:  126:        {
+        1:  127:            two_way_comm(input_fd, output_fd);
+        -:  128:        }
+       10:  129:        else if (parseCommand._i == 1 && parseCommand._o == 1) // One way communication
+        -:  130:        {
+        2:  131:            one_way_comm(input_fd, output_fd);
+        -:  132:        }
+        8:  133:        else if (parseCommand._i == 1 && parseCommand._o == 0) // Read from input_fd
+        -:  134:        {
+        6:  135:            handle_client(input_fd, 1);
+        -:  136:        }
+        2:  137:        else if (parseCommand._i == 0 && parseCommand._o == 1) // Write to output_fd
+        -:  138:        {
+        1:  139:            handle_client(output_fd, 0);
+        -:  140:        }
+        1:  141:        else if (parseCommand._i == 0 && parseCommand._o == 0) // Read from STDIN_FILENO and write to STDOUT_FILENO
+        -:  142:        {
+        1:  143:            two_way_comm(input_fd, output_fd);
+        -:  144:        }
+        -:  145:
+        -:  146:        // } (input_fd != STDIN_FILENO)
+        -:  147:        //     handle_client(input_fd, 1);
+        -:  148:        // else if (output_fd != STDOUT_FILENO)
+        -:  149:        //     handle_client(output_fd, 0);
+        -:  150:        // else if (input_fd == STDIN_FILENO && output_fd == STDOUT_FILENO)
+        -:  151:        //     handle_client(input_fd, 1);
+        -:  152:
+       11:  153:        return;
+        -:  154:    }
+        -:  155:
+        3:  156:    if ((id = fork()) == 0)
+        -:  157:    {
+        4:  158:        dup2(input_fd, STDIN_FILENO);
+        4:  159:        dup2(output_fd, STDOUT_FILENO);
+        -:  160:
+        4:  161:        execvp(cmd[0], cmd);
+        4:  162:        kill(id, SIGKILL);
+    #####:  163:        perror("execvp");
+    #####:  164:        exit(EXIT_FAILURE);
+        -:  165:    }
+        -:  166:    else
+        -:  167:    {
+        3:  168:        close(output_fd);
+        3:  169:        close(input_fd);
+        3:  170:        wait(NULL);
+        3:  171:        alarm(0);
+        -:  172:    }
+        -:  173:}
+        -:  174:
+       15:  175:int main(int argc, char **argv)
+        -:  176:{
+        -:  177:    networkParser parseCommand;
+        -:  178:
+       15:  179:    parseCommand = parseArgs(argc, argv);
+        -:  180:
+       15:  181:    if (!parseCommand._commandParser._successCode)
+        -:  182:    {
+        1:  183:        printf("Usage: %s [-e \"<command> <args>\"] [-i|-o|-b] [TCPS<PORT> | TCPC<ip:port> | TCPC<hostname:port>]\n", argv[0]);
+        1:  184:        exit(EXIT_FAILURE);
+        -:  185:    }
+        -:  186:
+       14:  187:    signal(SIGALRM, handle_alarm);
+        -:  188:
+       14:  189:    execute_command(parseCommand);
+        -:  190:
+       14:  191:    return 0;
+        -:  192:}

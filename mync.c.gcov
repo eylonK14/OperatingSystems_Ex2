@@ -1,0 +1,119 @@
+        -:    0:Source:mync.c
+        -:    0:Graph:mync.gcno
+        -:    0:Data:mync.gcda
+        -:    0:Runs:9
+        -:    1:#include "parser.h"
+        -:    2:#include <signal.h>
+        -:    3:
+        -:    4:pid_t id = 0;
+        -:    5:
+        1:    6:void handle_alarm(int sig)
+        -:    7:{
+        1:    8:    printf("Process No. %d timed out\n", sig);
+        1:    9:    if (id)
+        1:   10:        kill(id, SIGKILL);
+        1:   11:}
+        -:   12:
+    #####:   13:void handle_client(int sockfd, int inOrOut)
+        -:   14:{
+        -:   15:    char buffer[BUFFER_SIZE];
+        -:   16:    fd_set fds;
+        -:   17:    int n;
+        -:   18:
+        -:   19:    while (1)
+    #####:   20:    {
+    #####:   21:        FD_ZERO(&fds);
+    #####:   22:        if (inOrOut)
+        -:   23:        {
+    #####:   24:            FD_SET(sockfd, &fds);
+    #####:   25:            FD_SET(STDIN_FILENO, &fds);
+        -:   26:        }
+        -:   27:        else
+        -:   28:        {
+    #####:   29:            FD_SET(sockfd, &fds);
+        -:   30:        }
+        -:   31:
+    #####:   32:        int max_fd = sockfd > STDIN_FILENO ? sockfd : STDIN_FILENO;
+    #####:   33:        select(max_fd + 1, &fds, NULL, NULL, NULL);
+        -:   34:
+    #####:   35:        if (FD_ISSET(sockfd, &fds))
+        -:   36:        {
+    #####:   37:            if ((n = read(sockfd, buffer, sizeof(buffer) - 1)) <= 0)
+    #####:   38:                break;
+    #####:   39:            buffer[n] = '\0';
+    #####:   40:            printf("%s", buffer);
+    #####:   41:            fflush(stdout);
+        -:   42:        }
+        -:   43:
+    #####:   44:        if (FD_ISSET(STDIN_FILENO, &fds))
+        -:   45:        {
+    #####:   46:            if ((n = read(STDIN_FILENO, buffer, sizeof(buffer) - 1)) <= 0)
+    #####:   47:                continue;
+    #####:   48:            buffer[n] = '\0';
+    #####:   49:            write(sockfd, buffer, n);
+        -:   50:        }
+        -:   51:    }
+        -:   52:
+    #####:   53:    close(sockfd);
+    #####:   54:}
+        -:   55:
+        2:   56:void execute_command(networkParser parseCommand)
+        -:   57:{
+        2:   58:    int input_fd = parseCommand._inSockfd;
+        2:   59:    int output_fd = parseCommand._outSockfd;
+        2:   60:    char **cmd = parseCommand._commandParser._command;
+        -:   61:
+        2:   62:    if (parseCommand._connectionType != NULL && strcmp(parseCommand._connectionType, "UDP") == 0)
+        -:   63:    {
+        2:   64:        alarm(parseCommand._timeout);
+        -:   65:    }
+        -:   66:
+        2:   67:    if (!parseCommand._hasCommand)
+        -:   68:    {
+    #####:   69:        if (input_fd != STDIN_FILENO)
+    #####:   70:            handle_client(input_fd, 1);
+    #####:   71:        else if (output_fd != STDOUT_FILENO)
+    #####:   72:            handle_client(output_fd, 0);
+    #####:   73:        else if    (input_fd == STDIN_FILENO && output_fd == STDOUT_FILENO)
+    #####:   74:            handle_client(input_fd, 1);
+        -:   75:
+    #####:   76:        return;
+        -:   77:    }
+        -:   78:
+        2:   79:    if ((id = fork()) == 0)
+        -:   80:    {
+        6:   81:        dup2(input_fd, STDIN_FILENO);
+        6:   82:        dup2(output_fd, STDOUT_FILENO);
+        -:   83:
+        6:   84:        execvp(cmd[0], cmd);
+        6:   85:        kill(id, SIGKILL);
+    #####:   86:        perror("execvp");
+    #####:   87:        exit(EXIT_FAILURE);
+        -:   88:    }
+        -:   89:    else
+        -:   90:    {
+        2:   91:        close(output_fd);
+        2:   92:        close(input_fd);
+        2:   93:        wait(NULL);
+        2:   94:        alarm(0);
+        -:   95:    }
+        -:   96:}
+        -:   97:
+        3:   98:int main(int argc, char **argv)
+        -:   99:{
+        -:  100:    networkParser parseCommand;
+        -:  101:
+        3:  102:    parseCommand = parseArgs(argc, argv);
+        -:  103:
+        3:  104:    if (!parseCommand._commandParser._successCode)
+        -:  105:    {
+        1:  106:        printf("Usage: %s [-e \"<command> <args>\"] [-i|-o|-b] [TCPS<PORT> | TCPC<ip:port> | TCPC<hostname:port>]\n", argv[0]);
+        1:  107:        exit(EXIT_FAILURE);
+        -:  108:    }
+        -:  109:
+        2:  110:    signal(SIGALRM, handle_alarm);
+        -:  111:
+        2:  112:    execute_command(parseCommand);
+        -:  113:
+        2:  114:    return 0;
+        -:  115:}

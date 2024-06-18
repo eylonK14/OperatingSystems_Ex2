@@ -1,0 +1,96 @@
+        -:    0:Source:udpHandler.c
+        -:    0:Graph:udpHandler.gcno
+        -:    0:Data:udpHandler.gcda
+        -:    0:Runs:40
+        -:    0:Source is newer than graph
+        -:    1:#include "udpHandler.h"
+        -:    2:
+        1:    3:int udpServer(int port)
+        -:    4:{
+        -:    5:    int sockfd;
+        -:    6:    struct addrinfo hints, *serverinfo, *p;
+        -:    7:    int rv;
+        -:    8:
+        1:    9:    memset(&hints, 0, sizeof hints);
+        1:   10:    hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+        1:   11:    hints.ai_socktype = SOCK_DGRAM;
+        1:   12:    hints.ai_flags = AI_PASSIVE; // use my IP
+        -:   13:
+        1:   14:    char *portStr = malloc(6);
+        1:   15:    snprintf(portStr, 6, "%d", port);
+        -:   16:
+        1:   17:    if ((rv = getaddrinfo(NULL, portStr, &hints, &serverinfo)) != 0)
+        -:   18:    {
+    #####:   19:        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    #####:   20:        return -1;
+        -:   21:    }
+        -:   22:
+        -:   23:    // loop through all the results and bind to the first we can
+       1*:   24:    for (p = serverinfo; p != NULL; p = p->ai_next)
+        -:   25:    {
+       1*:   26:        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+        -:   27:        {
+    #####:   28:            perror("listener: socket");
+    #####:   29:            continue;
+        -:   30:        }
+        -:   31:
+       1*:   32:        if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1)
+        -:   33:        {
+    #####:   34:            close(sockfd);
+    #####:   35:            perror("listener: bind");
+    #####:   36:            continue;
+        -:   37:        }
+        -:   38:
+        1:   39:        break;
+        -:   40:    }
+        -:   41:
+        1:   42:    if (p == NULL)
+        -:   43:    {
+    #####:   44:        fprintf(stderr, "listener: failed to bind socket\n");
+    #####:   45:        return -2;
+        -:   46:    }
+        -:   47:
+        1:   48:    freeaddrinfo(serverinfo);
+        -:   49:
+        1:   50:    return sockfd;
+        -:   51:}
+        -:   52:
+        1:   53:int udpClient(int port, char *clientData)
+        -:   54:{
+        -:   55:    int sockfd;
+        -:   56:    struct addrinfo hints, *serverinfo, *p;
+        -:   57:    int rv;
+        -:   58:
+        -:   59:    memset(&hints, 0, sizeof hints);
+        -:   60:    hints.ai_family = AF_INET; // set to AF_INET to use IPv4
+        -:   61:    hints.ai_socktype = SOCK_DGRAM;
+        1:   62:
+        1:   63:    char *portStr = malloc(6);
+        1:   64:    snprintf(portStr, 6, "%d", port);
+        1:   65:
+        -:   66:    if ((rv = getaddrinfo(clientData, portStr, &hints, &serverinfo)) != 0)
+        1:   67:    {
+        1:   68:        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        1:   69:        return -1;
+        -:   70:    }
+        1:   71:
+        1:   72:    // loop through all the results and make a socket
+        -:   73:    for (p = serverinfo; p != NULL; p = p->ai_next)
+        1:   74:    {
+        -:   75:        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+    #####:   76:        {
+    #####:   77:            perror("talker: socket");
+        -:   78:            continue;
+        -:   79:        }
+        -:   80:
+        -:   81:        break;
+        2:   82:    }
+        -:   83:
+        -:   84:    if (p == NULL)
+        -:   85:    {
+        -:   86:        fprintf(stderr, "talker: failed to create socket\n");
+        -:   87:        return -2;
+        1:   88:    }
+        1:   89:
+        1:   90:    return sockfd;
+        -:   91:}

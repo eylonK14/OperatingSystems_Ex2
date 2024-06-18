@@ -1,0 +1,118 @@
+        -:    0:Source:udsHandler.c
+        -:    0:Graph:udsHandler.gcno
+        -:    0:Data:udsHandler.gcda
+        -:    0:Runs:40
+        -:    0:Source is newer than graph
+        -:    1:#include "udsHandler.h"
+        -:    2:
+        1:    3:int streamServer(char *socketPath)
+        -:    4:{
+        -:    5:    int s, s2, len;
+        1:    6:    struct sockaddr_un remote, local = {.sun_family = AF_UNIX,};
+        -:    7:
+        1:    8:    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+        -:    9:    {
+    #####:   10:        perror("socket");
+    #####:   11:        exit(1);
+        -:   12:    }
+        -:   13:
+        1:   14:    strcpy(local.sun_path, socketPath);
+        1:   15:    unlink(local.sun_path);
+        1:   16:    len = strlen(local.sun_path) + sizeof(local.sun_family);
+        1:   17:    if (bind(s, (struct sockaddr *)&local, len) == -1)
+        -:   18:    {
+    #####:   19:        perror("bind");
+    #####:   20:        exit(1);
+        -:   21:    }
+        -:   22:
+        1:   23:    if (listen(s, 5) == -1)
+        -:   24:    {
+    #####:   25:        perror("listen");
+    #####:   26:        exit(1);
+        -:   27:    }
+        -:   28:
+        1:   29:    socklen_t slen = sizeof(remote);
+        1:   30:    if ((s2 = accept(s, (struct sockaddr *)&remote, &slen)) == -1)
+        -:   31:    {
+    #####:   32:        perror("accept");
+    #####:   33:        exit(1);
+        -:   34:    }
+        -:   35:
+        1:   36:    return s2;
+        -:   37:}
+        -:   38:
+        2:   39:int streamClient(char *socketPath)
+        -:   40:{
+        -:   41:    int s, len;
+        2:   42:    struct sockaddr_un remote = {.sun_family = AF_UNIX,};
+        -:   43:
+        2:   44:    if ((s = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+        -:   45:    {
+    #####:   46:        perror("socket");
+    #####:   47:        exit(1);
+        -:   48:    }
+        -:   49:
+        2:   50:    printf("Trying to connect...\n");
+        -:   51:
+        2:   52:    strcpy(remote.sun_path, socketPath);
+        2:   53:    len = strlen(remote.sun_path) + sizeof(remote.sun_family);
+        2:   54:    if (connect(s, (struct sockaddr *)&remote, len) == -1)
+        -:   55:    {
+        1:   56:        perror("connect");
+        1:   57:        exit(1);
+        -:   58:    }
+        -:   59:
+        1:   60:    printf("Connected.\n");
+        -:   61:
+        1:   62:    return s;
+        -:   63:}
+        -:   64:
+        2:   65:int datagramServer(char *socketPath)
+        -:   66:{
+        -:   67:    int s, len;
+        2:   68:    struct sockaddr_un local = {.sun_family = AF_UNIX};
+        -:   69:
+        2:   70:    if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
+        -:   71:    {
+    #####:   72:        perror("socket");
+    #####:   73:        exit(1);
+        -:   74:    }
+        -:   75:
+        2:   76:    strcpy(local.sun_path, socketPath);
+        2:   77:    unlink(local.sun_path);
+        2:   78:    len = strlen(local.sun_path) + sizeof(local.sun_family);
+        2:   79:    if (bind(s, (struct sockaddr *)&local, len) == -1)
+        -:   80:    {
+    #####:   81:        perror("bind");
+    #####:   82:        exit(1);
+        -:   83:    }
+        -:   84:
+        2:   85:    return s;
+        -:   86:}
+        -:   87:
+        2:   88:int datagramClient(char *socketPath)
+        -:   89:{
+        -:   90:    int sockfd;
+        2:   91:    struct sockaddr_un addr;
+        -:   92:
+        -:   93:    // Create a socket
+        -:   94:    if ((sockfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+        2:   95:        perror("socket error");
+        -:   96:        return -1;
+    #####:   97:    }
+    #####:   98:
+        -:   99:    // Configure the socket address structure
+        -:  100:    memset(&addr, 0, sizeof(addr));
+        2:  101:    addr.sun_family = AF_UNIX;
+        -:  102:    strncpy(addr.sun_path, socketPath, sizeof(addr.sun_path) - 1);
+        2:  103:
+        -:  104:    // Connect to the server socket
+        -:  105:    if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        -:  106:        perror("connect error");
+        -:  107:        close(sockfd);
+        -:  108:        return -1;
+        -:  109:    }
+        -:  110:
+        -:  111:    // Return the socket file descriptor
+        -:  112:    return sockfd;
+        -:  113:}

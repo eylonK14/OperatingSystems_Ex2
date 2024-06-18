@@ -1,0 +1,210 @@
+        -:    0:Source:ttt.c
+        -:    0:Graph:ttt.gcno
+        -:    0:Data:ttt.gcda
+        -:    0:Runs:14
+        -:    1:#include <stdio.h>
+        -:    2:#include <stdlib.h>
+        -:    3:#include <string.h>
+        -:    4:#include <unistd.h>
+        -:    5:
+        -:    6:#define X -1
+        -:    7:#define O -2
+        -:    8:#define BOARD_SIZE 3
+        -:    9:
+      544:   10:void printFlushed(char *s)
+        -:   11:{
+      544:   12:    printf("%s", s);
+      544:   13:    fflush(stdout);
+      544:   14:}
+        -:   15:
+       14:   16:int valid(int argc, char **argv)
+        -:   17:{
+       14:   18:    if (argc != 2)
+        1:   19:        return 0;
+       13:   20:    if (atoi(argv[1]) < 1)
+        2:   21:        return 0;
+       11:   22:    if (strlen(argv[1]) != BOARD_SIZE * BOARD_SIZE)
+        1:   23:        return 0;
+       10:   24:    int counter[10] = {0};
+       89:   25:    for (int i = 0; i < BOARD_SIZE * BOARD_SIZE; i++)
+        -:   26:    {
+       81:   27:        if (argv[1][i] < '1' || argv[1][i] > '9')
+        1:   28:            return 0;
+       80:   29:        counter[argv[1][i] - '0']++;
+       80:   30:        if (counter[argv[1][i] - '0'] != 1)
+        1:   31:            return 0;
+        -:   32:    }
+        8:   33:    return 1;
+        -:   34:}
+        -:   35:
+       60:   36:void print(int board[BOARD_SIZE][BOARD_SIZE])
+        -:   37:{
+      240:   38:    for (int i = 0; i < BOARD_SIZE; i++)
+        -:   39:    {
+      720:   40:        for (int j = 0; j < BOARD_SIZE; j++)
+        -:   41:        {
+      540:   42:            if (board[i][j] == X)
+      115:   43:                printFlushed("X ");
+      425:   44:            else if (board[i][j] == O)
+       87:   45:                printFlushed("O ");
+        -:   46:            else
+        -:   47:            {
+      338:   48:                printf("%d ", board[i][j]);
+      338:   49:                fflush(stdout);
+        -:   50:            }
+        -:   51:        }
+      180:   52:        printFlushed("\n");
+        -:   53:    }
+       60:   54:    printFlushed("\n");
+       60:   55:}
+        -:   56:
+       62:   57:int putInLocation(int board[BOARD_SIZE][BOARD_SIZE], int i, int j, int sign)
+        -:   58:{
+       62:   59:    if (board[i][j] != X && board[i][j] != O)
+        -:   60:    {
+       52:   61:        board[i][j] = sign;
+       52:   62:        return 0;
+        -:   63:    }
+        -:   64:    else
+        -:   65:    {
+       10:   66:        printFlushed("Invalid - Already Occupied\n");
+       10:   67:        return 1;
+        -:   68:    }
+        -:   69:}
+        -:   70:
+       63:   71:int makeAplay(int board[BOARD_SIZE][BOARD_SIZE], int move, int sign)
+        -:   72:{
+       63:   73:    switch (move)
+        -:   74:    {
+        9:   75:    case 1:
+        9:   76:        return putInLocation(board, 0, 0, sign);
+       11:   77:    case 2:
+       11:   78:        return putInLocation(board, 0, 1, sign);
+       10:   79:    case 3:
+       10:   80:        return putInLocation(board, 0, 2, sign);
+        9:   81:    case 4:
+        9:   82:        return putInLocation(board, 1, 0, sign);
+        7:   83:    case 5:
+        7:   84:        return putInLocation(board, 1, 1, sign);
+        4:   85:    case 6:
+        4:   86:        return putInLocation(board, 1, 2, sign);
+        5:   87:    case 7:
+        5:   88:        return putInLocation(board, 2, 0, sign);
+        3:   89:    case 8:
+        3:   90:        return putInLocation(board, 2, 1, sign);
+        4:   91:    case 9:
+        4:   92:        return putInLocation(board, 2, 2, sign);
+        1:   93:    default:
+        1:   94:        printFlushed("Invalid move!\n");
+        1:   95:        break;
+        -:   96:    }
+        1:   97:    return 1;
+        -:   98:}
+        -:   99:
+       77:  100:int over(int board[BOARD_SIZE][BOARD_SIZE])
+        -:  101:{
+       77:  102:    int isBoardFull = 1;
+       77:  103:    int countXMainDiagonal = 0;
+       77:  104:    int countXSecondaryDiagonal = 0;
+       77:  105:    int countOMainDiagonal = 0;
+       77:  106:    int countOSecondaryDiagonal = 0;
+        -:  107:
+      299:  108:    for (int i = 0; i < BOARD_SIZE; i++)
+        -:  109:    {
+      226:  110:        int countXHorizontal = 0;
+      226:  111:        int countXVertical = 0;
+      226:  112:        int countOHorizontal = 0;
+      226:  113:        int countOVertical = 0;
+        -:  114:
+      904:  115:        for (int j = 0; j < BOARD_SIZE; j++)
+        -:  116:        {
+      678:  117:            if (board[i][j] != X && board[i][j] != O)
+      396:  118:                isBoardFull = 0;
+        -:  119:
+      678:  120:            if (X == board[i][j])
+      170:  121:                countXHorizontal++;
+      678:  122:            if (X == board[j][i])
+      165:  123:                countXVertical++;
+      678:  124:            if (O == board[i][j])
+      112:  125:                countOHorizontal++;
+      678:  126:            if (O == board[j][i])
+      114:  127:                countOVertical++;
+        -:  128:        }
+      226:  129:        if (countOHorizontal == BOARD_SIZE || countOVertical == BOARD_SIZE)
+        2:  130:            return O;
+      224:  131:        else if (countXHorizontal == BOARD_SIZE || countXVertical == BOARD_SIZE)
+        2:  132:            return X;
+        -:  133:
+      222:  134:        if (X == board[i][i])
+       81:  135:            countXMainDiagonal++;
+      222:  136:        if (X == board[i][BOARD_SIZE - 1 - i])
+       46:  137:            countXSecondaryDiagonal++;
+      222:  138:        if (O == board[i][i])
+       24:  139:            countOMainDiagonal++;
+      222:  140:        if (O == board[i][BOARD_SIZE - 1 - i])
+       42:  141:            countOSecondaryDiagonal++;
+        -:  142:    }
+        -:  143:
+       73:  144:    if (countOMainDiagonal == BOARD_SIZE || countOSecondaryDiagonal == BOARD_SIZE)
+        2:  145:        return O;
+       71:  146:    else if (countXMainDiagonal == BOARD_SIZE || countXSecondaryDiagonal == BOARD_SIZE)
+        1:  147:        return X;
+       70:  148:    return isBoardFull;
+        -:  149:}
+        -:  150:
+       28:  151:int move(char *moveList, int board[BOARD_SIZE][BOARD_SIZE], int *turn)
+        -:  152:{
+       28:  153:    printFlushed("Machine Turn: \n");
+       38:  154:    while (makeAplay(board, moveList[*turn] - '0', X) == 1)
+        -:  155:    {
+       10:  156:        ++*turn;
+        -:  157:    }
+       28:  158:    ++*turn;
+       28:  159:    print(board);
+        -:  160:    
+       28:  161:    if (over(board) == X)
+        3:  162:        return X;
+       25:  163:    if (over(board) == 1)
+        1:  164:        return 1;
+        -:  165:
+       24:  166:    int move = 0;
+        -:  167:    do
+        -:  168:    {
+       25:  169:        printFlushed("Enter your move: \n");
+       25:  170:        scanf("%d", &move);
+       25:  171:    } while (makeAplay(board, move, O) != 0);
+       24:  172:    printFlushed("User Turn: \n");
+       24:  173:    print(board);
+        -:  174:
+       24:  175:    if (over(board) == O)
+        4:  176:        return O;
+        -:  177:
+       20:  178:    return 0;
+        -:  179:}
+        -:  180:
+       14:  181:int main(int argc, char **argv)
+        -:  182:{
+       14:  183:    int lastState = 0;
+       14:  184:    int board[BOARD_SIZE][BOARD_SIZE] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
+        -:  185:
+       14:  186:    if (!(valid(argc, argv)))
+        -:  187:    {
+        6:  188:        printFlushed("Error\n");
+        6:  189:        return 1;
+        -:  190:    }
+        8:  191:    int position = 0;
+        8:  192:    print(board);
+       36:  193:    while (lastState == 0)
+        -:  194:    {
+       28:  195:        lastState = move(argv[1], board, &position);
+        -:  196:    }
+        -:  197:
+        8:  198:    if (lastState == X)
+        3:  199:        printFlushed("I won\n");
+        5:  200:    else if (lastState == O)
+        4:  201:        printFlushed("I lost\n");
+        1:  202:    else if (lastState == 1)
+        1:  203:        printFlushed("DRAW\n");
+        -:  204:
+        8:  205:    return 0;
+        -:  206:}

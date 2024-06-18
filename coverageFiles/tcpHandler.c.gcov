@@ -1,0 +1,108 @@
+        -:    0:Source:tcpHandler.c
+        -:    0:Graph:tcpHandler.gcno
+        -:    0:Data:tcpHandler.gcda
+        -:    0:Runs:21
+        -:    1:#include "tcpHandler.h"
+        -:    2:
+        5:    3:int tcpServer(int port)
+        -:    4:{
+        -:    5:    struct sockaddr_in server;
+        -:    6:    struct sockaddr_in client;
+        5:    7:    socklen_t client_len = sizeof(client);
+        -:    8:
+        5:    9:    memset(&server, 0, sizeof(server));
+        5:   10:    memset(&client, 0, sizeof(client));
+        5:   11:    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        -:   12:
+        5:   13:    server.sin_addr.s_addr = inet_addr("127.0.0.1");
+        5:   14:    server.sin_family = AF_INET;
+        5:   15:    server.sin_port = htons(port);
+        5:   16:    if (bind(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
+        -:   17:    {
+        2:   18:        perror("bind(2)");
+        2:   19:        close(sock);
+        2:   20:        return 1;
+        -:   21:    }
+        -:   22:
+        3:   23:    if (listen(sock, 1) < 0)
+        -:   24:    {
+    #####:   25:        perror("listen(2)");
+    #####:   26:        close(sock);
+    #####:   27:        return 1;
+        -:   28:    }
+        -:   29:
+        3:   30:    printf("Waiting for TCP connection...\n");
+        3:   31:    int client_sock = accept(sock, (struct sockaddr *)&client, &client_len); // try to connect
+        3:   32:    if (client_sock < 0)
+        -:   33:    {
+    #####:   34:        perror("accept(2)");
+    #####:   35:        close(sock);
+    #####:   36:        return 1;
+        -:   37:    }
+        3:   38:    return client_sock;
+        -:   39:}
+        -:   40:
+        4:   41:int tcpClient(int port, char *clientData)
+        -:   42:{
+        -:   43:    struct sockaddr_in server;
+        4:   44:    memset(&server, 0, sizeof(server));
+        -:   45:    struct addrinfo hints, *res, *p;
+        -:   46:    int status;
+        -:   47:    char ipstr[INET_ADDRSTRLEN];
+        -:   48:
+        4:   49:    memset(&hints, 0, sizeof(hints));
+        4:   50:    hints.ai_family = AF_INET; // AF_INET or AF_INET6 to force version
+        4:   51:    hints.ai_socktype = SOCK_STREAM;
+        -:   52:
+        4:   53:    if ((status = getaddrinfo(clientData, NULL, &hints, &res)) != 0)
+        -:   54:    {
+    #####:   55:        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(status));
+    #####:   56:        return 2;
+        -:   57:    }
+        -:   58:
+        4:   59:    printf("IP addresses for %s:\n\n", clientData);
+        -:   60:
+        8:   61:    for (p = res; p != NULL; p = p->ai_next)
+        -:   62:    {
+        -:   63:        void *addr;
+        -:   64:        char *ipversion;
+        -:   65:
+        -:   66:        // get the pointer to the address itself
+        4:   67:        struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+        4:   68:        addr = &(ipv4->sin_addr);
+        4:   69:        ipversion = "IPv4";
+        -:   70:
+        -:   71:        // convert the IP to a string and print it:
+        4:   72:        inet_ntop(p->ai_family, addr, ipstr, sizeof ipstr);
+        4:   73:        printf("  %s: %s\n", ipversion, ipstr);
+        -:   74:    }
+        -:   75:
+        4:   76:    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        4:   77:    if (sock < 0)
+        -:   78:    {
+    #####:   79:        perror("socket(2)");
+    #####:   80:        return 1;
+        -:   81:    }
+        -:   82:
+        4:   83:    if (inet_pton(AF_INET, ipstr, &server.sin_addr) <= 0)
+        -:   84:    {
+    #####:   85:        perror("inet_pton(3)");
+    #####:   86:        close(sock);
+    #####:   87:        return 1;
+        -:   88:    }
+        -:   89:
+        4:   90:    server.sin_family = AF_INET;
+        4:   91:    server.sin_port = htons(port);
+        -:   92:
+        4:   93:    int con = connect(sock, (struct sockaddr *)&server, sizeof(server));
+        4:   94:    if (con < 0)
+        -:   95:    {
+        2:   96:        perror("connect(2)");
+        2:   97:        close(sock);
+        2:   98:        return 1;
+        -:   99:    }
+        -:  100:
+        2:  101:    freeaddrinfo(res); // free the linked list
+        -:  102:
+        2:  103:    return sock;
+        -:  104:}

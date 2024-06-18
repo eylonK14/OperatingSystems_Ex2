@@ -1,0 +1,174 @@
+        -:    0:Source:parser.c
+        -:    0:Graph:parser.gcno
+        -:    0:Data:parser.gcda
+        -:    0:Runs:40
+        -:    1:#include "parser.h"
+        -:    2:
+        9:    3:int words(char sentence[])
+        -:    4:{
+        9:    5:    int count = 1;
+      144:    6:    for (int i = 0; sentence[i] != '\0'; ++i)
+      135:    7:        if (sentence[i] == ' ')
+        9:    8:            count++;
+        9:    9:    return count;
+        -:   10:}
+        -:   11:
+        9:   12:networkParser parseCommand(networkParser parser, char *op)
+        -:   13:{
+        9:   14:    int amountOfCommands = words(op);
+        -:   15:
+        9:   16:    char **command = (char **)malloc(sizeof(char *) * (amountOfCommands + 1));
+        9:   17:    char *token = strtok(op, " ");
+        9:   18:    int i = 0;
+       27:   19:    while (token != NULL)
+        -:   20:    {
+       18:   21:        command[i] = (char *)malloc(sizeof(char) * strlen(token));
+       18:   22:        command[i++] = token;
+       18:   23:        token = strtok(NULL, " ");
+        -:   24:    }
+        9:   25:    command[amountOfCommands] = NULL;
+        9:   26:    parser._commandParser._command = command;
+        9:   27:    parser._hasCommand = 1;
+        9:   28:    return parser;
+        -:   29:}
+        -:   30:
+        5:   31:int createNetworkSocket(char *ip, int *port, char *networkData, int (*serverFunction)(int), int (*clientFunction)(int, char *))
+        -:   32:{
+        5:   33:    int sockfd = -1;
+        5:   34:    char serverOrClient = networkData[3];
+        5:   35:    if (serverOrClient == 'S')
+        -:   36:    {
+        4:   37:        *port = atoi(networkData + 4);
+        4:   38:        int p = *port;
+        4:   39:        sockfd = serverFunction(p);
+        -:   40:    }
+        1:   41:    else if (serverOrClient == 'C')
+        -:   42:    {
+        1:   43:        ip = networkData + 4;
+        1:   44:        *port = atoi(strchr(ip, ':') + 1);
+        1:   45:        int p = *port;
+        1:   46:        ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
+        1:   47:        sockfd = clientFunction(p, ip);
+        -:   48:    }
+        -:   49:    else
+    #####:   50:        exit(EXIT_FAILURE);
+        -:   51:
+        5:   52:    return sockfd;
+        -:   53:}
+        -:   54:
+        7:   55:int unixDomainSocketParser(char *networkData)
+        -:   56:{
+        7:   57:    int sockfd = -1;
+        7:   58:    char serverOrClient = networkData[3];
+        7:   59:    char tcpOrUdp = networkData[4];
+        7:   60:    char *path = networkData + 5;
+        7:   61:    if (serverOrClient == 'S')
+        -:   62:    {
+        3:   63:        if (tcpOrUdp == 'S')
+        1:   64:            sockfd = streamServer(path);
+        2:   65:        else if (tcpOrUdp == 'D')
+        2:   66:            sockfd = datagramServer(path);
+        -:   67:        else
+    #####:   68:            exit(EXIT_FAILURE);
+        -:   69:    }
+        4:   70:    else if (serverOrClient == 'C')
+        -:   71:    {
+        4:   72:        if (tcpOrUdp == 'S')
+        2:   73:            sockfd = streamClient(path);
+        2:   74:        else if (tcpOrUdp == 'D')
+        2:   75:            sockfd = datagramClient(path);
+        -:   76:        else
+    #####:   77:            exit(EXIT_FAILURE);
+        -:   78:    }
+        -:   79:    else
+    #####:   80:        exit(EXIT_FAILURE);
+        6:   81:    return sockfd;
+        -:   82:}
+        -:   83:
+       12:   84:networkParser parseNetworkData(networkParser netParse, char opt, char *networkData)
+        -:   85:{
+        -:   86:
+       12:   87:    int sockfd = -1, port = 0;
+        -:   88:    char type[3];
+       12:   89:    char *ip = NULL;
+       12:   90:    int hasConnectionType = 0;
+       12:   91:    strncpy(type, networkData, 3);
+       12:   92:    if (strcmp(type, "TCP") == 0)
+        -:   93:    {
+        3:   94:        sockfd = createNetworkSocket(ip, &port, networkData, tcpServer, tcpClient);
+        3:   95:        hasConnectionType = 1;
+        3:   96:        printf("TCP sockfd: %d\n", sockfd);
+        -:   97:    }
+        9:   98:    else if (strcmp(type, "UDP") == 0)
+        -:   99:    {
+        2:  100:        sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
+        2:  101:        hasConnectionType = 1;
+        2:  102:        printf("UDP sockfd: %d\n", sockfd);
+        -:  103:    }
+        7:  104:    else if (strcmp(type, "UDS") == 0)
+        -:  105:    {
+        7:  106:        sockfd = unixDomainSocketParser(networkData);
+        6:  107:        hasConnectionType = 1;
+        -:  108:    }
+        -:  109:    else
+    #####:  110:        exit(EXIT_FAILURE);
+        -:  111:
+       11:  112:    if (opt == 'i')
+        -:  113:    {
+        6:  114:        netParse._inSockfd = sockfd;
+        6:  115:        netParse._i++;
+        -:  116:    }
+        5:  117:    else if (opt == 'o')
+        -:  118:    {
+        3:  119:        netParse._outSockfd = sockfd;
+        3:  120:        netParse._o++;
+        -:  121:    }
+        2:  122:    else if (opt == 'b')
+        -:  123:    {
+        2:  124:        netParse._inSockfd = sockfd;
+        2:  125:        netParse._outSockfd = sockfd;
+        -:  126:    }
+       11:  127:    netParse._port = port;
+       11:  128:    netParse._ip = ip;
+       11:  129:    netParse._connectionType = NULL;
+       11:  130:    netParse._hasConnectionType = hasConnectionType;
+       11:  131:    netParse._connectionType = (char *)malloc(sizeof(char) * 3);
+       11:  132:    strncpy(netParse._connectionType, type, 3);
+       11:  133:    return netParse;
+        -:  134:}
+        -:  135:
+       12:  136:networkParser parseArgs(int argc, char **argv)
+        -:  137:{
+        -:  138:    networkParser netParse;
+       12:  139:    netParse._inSockfd = STDIN_FILENO;
+       12:  140:    netParse._outSockfd = STDOUT_FILENO;
+       12:  141:    netParse._hasCommand = 0;
+       12:  142:    netParse._hasConnectionType = 0;
+       12:  143:    netParse._i = 0;
+       12:  144:    netParse._o = 0;
+        -:  145:
+       12:  146:    int opt = 0;
+       33:  147:    while ((opt = getopt(argc, argv, "e:i:o:b:t:")) != -1)
+        -:  148:    {
+       23:  149:        switch (opt)
+        -:  150:        {
+        9:  151:        case 'e':
+        9:  152:            netParse = parseCommand(netParse, optarg);
+        9:  153:            break;
+       12:  154:        case 'b':
+        -:  155:        case 'i':
+        -:  156:        case 'o':
+       12:  157:            netParse = parseNetworkData(netParse, opt, optarg);
+       11:  158:            break;
+        1:  159:        case 't':
+        1:  160:            netParse._timeout = atoi(optarg);
+        1:  161:            break;
+        1:  162:        default:
+        1:  163:            netParse._commandParser._successCode = 0;
+        1:  164:            return netParse;
+        -:  165:        }
+        -:  166:    }
+       10:  167:    netParse._commandParser._successCode = 1;
+        -:  168:
+       10:  169:    return netParse;
+        -:  170:}
