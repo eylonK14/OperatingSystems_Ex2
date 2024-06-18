@@ -44,12 +44,11 @@ int createNetworkSocket(char *ip, int *port, char *networkData, int (*serverFunc
         *port = atoi(strchr(ip, ':') + 1);
         int p = *port;
         ip[strlen(ip) - strlen(strchr(ip, ':'))] = '\0';
-        printf("the current ip is: %s\n", ip);
         sockfd = clientFunction(p, ip);
     }
     else
         exit(EXIT_FAILURE);
-    printf("the currrrrrent sockfd is: %d\n", sockfd);
+
     return sockfd;
 }
 
@@ -114,7 +113,8 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     }
     netParse._port = port;
     netParse._ip = ip;
-    netParse._connectionType = type;
+    netParse._connectionType = (char *)malloc(sizeof(char) * 3);
+    strncpy(netParse._connectionType, type, 3);
     return netParse;
 }
 
