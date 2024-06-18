@@ -1,6 +1,6 @@
 # Variables
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Werror -lc
+CFLAGS = -g -Wall -Wextra -Werror -lc -fprofile-arcs -ftest-coverage
 LDFLAGS = -static
 LIBNAME = libmylib.a
 
@@ -32,6 +32,6 @@ executables: $(OBJ_EXEC_FILES)
 
 # Clean up
 clean:
-	rm -f $(OBJ_LIB_FILES) $(OBJ_EXEC_FILES) $(LIBNAME) ttt mync
+	rm -f $(OBJ_LIB_FILES) $(OBJ_EXEC_FILES) $(LIBNAME) ttt mync *.gcda *.gcno *.gcov
 
 .PHONY: clean all

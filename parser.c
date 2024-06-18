@@ -83,29 +83,42 @@ int unixDomainSocketParser(char *networkData)
 
 networkParser parseNetworkData(networkParser netParse, char opt, char *networkData)
 {
+
     int sockfd = -1, port = 0;
     char type[3];
     char *ip = NULL;
+    int hasConnectionType = 0;
     strncpy(type, networkData, 3);
     if (strcmp(type, "TCP") == 0)
     {
         sockfd = createNetworkSocket(ip, &port, networkData, tcpServer, tcpClient);
+        hasConnectionType = 1;
+        printf("TCP sockfd: %d\n", sockfd);
     }
     else if (strcmp(type, "UDP") == 0)
     {
         sockfd = createNetworkSocket(ip, &port, networkData, udpServer, udpClient);
+        hasConnectionType = 1;
+        printf("UDP sockfd: %d\n", sockfd);
     }
     else if (strcmp(type, "UDS") == 0)
     {
         sockfd = unixDomainSocketParser(networkData);
+        hasConnectionType = 1;
     }
     else
         exit(EXIT_FAILURE);
 
     if (opt == 'i')
+    {
         netParse._inSockfd = sockfd;
+        netParse._i++;
+    }
     else if (opt == 'o')
+    {
         netParse._outSockfd = sockfd;
+        netParse._o++;
+    }
     else if (opt == 'b')
     {
         netParse._inSockfd = sockfd;
@@ -113,6 +126,8 @@ networkParser parseNetworkData(networkParser netParse, char opt, char *networkDa
     }
     netParse._port = port;
     netParse._ip = ip;
+    netParse._connectionType = NULL;
+    netParse._hasConnectionType = hasConnectionType;
     netParse._connectionType = (char *)malloc(sizeof(char) * 3);
     strncpy(netParse._connectionType, type, 3);
     return netParse;
@@ -124,11 +139,9 @@ networkParser parseArgs(int argc, char **argv)
     netParse._inSockfd = STDIN_FILENO;
     netParse._outSockfd = STDOUT_FILENO;
     netParse._hasCommand = 0;
-    if (argc < 1)
-    {
-        netParse._commandParser._successCode = 0;
-        return netParse;
-    }
+    netParse._hasConnectionType = 0;
+    netParse._i = 0;
+    netParse._o = 0;
 
     int opt = 0;
     while ((opt = getopt(argc, argv, "e:i:o:b:t:")) != -1)

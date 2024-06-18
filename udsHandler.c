@@ -87,18 +87,27 @@ int datagramServer(char *socketPath)
 
 int datagramClient(char *socketPath)
 {
-    int s;
-    struct sockaddr_un remote = {
-        .sun_family = AF_UNIX,
-    };
+    int sockfd;
+    struct sockaddr_un addr;
 
-    if ((s = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1)
-    {
-        perror("socket");
-        exit(1);
+    // Create a socket
+    if ((sockfd = socket(AF_UNIX, SOCK_DGRAM, 0)) == -1) {
+        perror("socket error");
+        return -1;
     }
 
-    strcpy(remote.sun_path, socketPath);
+    // Configure the socket address structure
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+    strncpy(addr.sun_path, socketPath, sizeof(addr.sun_path) - 1);
 
-    return s;
+    // Connect to the server socket
+    if (connect(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+        perror("connect error");
+        close(sockfd);
+        return -1;
+    }
+
+    // Return the socket file descriptor
+    return sockfd;
 }

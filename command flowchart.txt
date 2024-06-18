@@ -1,0 +1,21 @@
+1 - ./ttt 123456789
+
+2 - ./mync -e "./ttt 123456789"
+
+3 - ./mync -e "./ttt 123456789" -i TCPS4050 == nc localhost 4050
+	./mync -e "./ttt 123456789" -b TCPS4050 == nc localhost 4050
+	./mync -e "./ttt 123456789" -i TCPS4050 -o TCPClocalhost:4455 == nc -l -p 4455 && nc localhost 4050
+
+3.5-./mync -i TCPS4050 == ./mync -i TCPClocalhost:4050
+	./mync -b TCPS4050 == nc localhost 4050
+	./mync -i TCPS4050 -o TCPClocalhost:4455 == nc -l -p 4455 && nc localhost 4050
+
+4 - ./mync -e "./ttt 123456789" -i UDPS4050 == nc -u localhost 4050
+	./mync -e "./ttt 123456789" -o UDPClocalhost:4050 == nc -u -l -p 4050
+	./mync -e "./ttt 123456789" -i TCPS4050 -o UDPClocalhost:4455 == nc -u -l -p 4455 && nc localhost 4050
+
+5 - none
+
+6 - ./mync -e "./ttt 123456789" -i UDSSS/tmp/socket == socat - unix-connect:/tmp/socket
+	./mync -e "./ttt 123456789" -i UDSCS/tmp/socket == socat - unix-listen:/tmp/socket
+	./mync -e "./ttt 123456789" -i UDSSD/tmp/socket == socat - /tmp/socket

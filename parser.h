@@ -30,6 +30,9 @@ typedef struct _networkParser
     int _hasCommand;
     int _inSockfd;
     int _outSockfd;
+    int _hasConnectionType;
+    int _i;
+    int _o;
     int _port;
     char *_ip;
     char *_connectionType;

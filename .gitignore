@@ -4,3 +4,5 @@
 ttt
 mync
 *.a
+*.gcda
+*.gcno
